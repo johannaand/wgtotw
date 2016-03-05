@@ -1,0 +1,23 @@
+{
+    "name": "jovis/wgtotw",    
+    "type": "library",
+    "description": "klasser för att hantera frågor, svar och användare på ett forum",
+    "keywords": ["module", "framework", "mvc", "micro"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Johanna Andersson",
+            "email": "johannaand@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "mos/cdatabase": "dev-master",
+        "jovis/chtmltable": "@dev"
+    },
+    "autoload": {
+        "psr-4": { "Jovis\\": "src/" }
+    },
+    "minimum-stability": "dev"
+}
