@@ -3,10 +3,10 @@
 namespace Jovis\Question;
  
 /**
- * Model for Questions.
+ * Model for Questions Comments.
  *
  */
-class Question extends \Jovis\DatabaseModel\CDatabaseModel
+class QComment extends \Jovis\DatabaseModel\CDatabaseModel
 {
 	
 	//hitta kommentar till fråga med id qid
@@ -17,9 +17,10 @@ class Question extends \Jovis\DatabaseModel\CDatabaseModel
              ->where("qid = ?");
  
 		$this->db->execute([$qid]);
-		return $this->db->fetchInto($this);
+		
+		$this->db->setFetchModeClass(__CLASS__);
+		return $this->db->fetchAll();
 	}
-	
 }
 
 ?>

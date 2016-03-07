@@ -1,6 +1,6 @@
 <?php
 
-namespace Jovis\Question
+namespace Jovis\Question;
  
 /**
  * A controller for handling questions.
@@ -20,78 +20,228 @@ class QuestionController implements \Anax\DI\IInjectionAware
   {
       $this->question = new \Jovis\Question\Question();
       $this->question->setDI($this->di);
+      
+      $this->answer = new \Jovis\Question\Answer();
+      $this->answer->setDI($this->di);
   }
     
     
    /**
-   * List all users.
+   * List all questions.
    *
    * @return void
    */
   public function listAction($info=null)
   {
-      $this->initialize();
+		$this->initialize();
+		$all = $this->question->findAll();
+		$arrQuestions;
+
+		foreach ($all as $key1=>$value) {	
+
+			foreach ($value as $key2=>$v){ //hitta värden i frågan
+				switch ($key2) {
+					case 'qid':
+						 $id = $v;
+						 break;
+					case 'title':
+						 $title = $v;
+						 break;
+					case 'content':
+						 $content = $v;
+						 break;
+					case 'created':
+						 $created = $v;
+						 break;
+					case 'updated':
+						 $updated = $v;
+						 break;
+					case 'uid':
+						 $uid = $v;
+						 break;
+				}
+			}
+			
+			//skapa frågecontainer
+			$this->qContainer = new \Jovis\Question\QuestionContainer($id, $title, $content, $created, $updated, $uid);
+			
+			//lägg till taggarna
+			$this->addTags($id);
+			
+			$arrQuestions[] = $this->qContainer;
+			
+		}        
    
-      $all = $this->question->findAll();
-      
-      $aContent;
-            
-      //gör om arrayen av objekt till en array av arrayer
-      foreach ($all as $key1=>$value) {
-        foreach ($value as $key2=>$v){
-          if (!in_array($key2, $noListing)) { //$noListing, parametrar som inte ska vara med
-              $aContent[$key1][$key2] = $v;
-          }
-        }
-      }
-     
-      
-      $aHeading = [];
-      //hittar objektens parametrar/tabellens kolumnnamn och skapar
-      //en ny array av rubriker
-      foreach ($all as $key1=>$value) {
-        foreach ($value as $key2=>$v){
-          if (!in_array($key2, $noListing)) { //$noListing, parametrar som inte ska vara med
-              $aHeading[] = $key2;
-          }
-        }
-        break;  
-      }
-      
-      $this->chtml = new \Jovis\HTMLTable\CHTMLTable($aHeading, $aContent);
-      
-      $htmltable = $this->chtml->getTable();
-           
-   
-      $this->theme->setTitle("Frågor");
-      $this->views->add('questions/list-all', [
+		$this->theme->setTitle("Frågor");
+		$this->views->add('question/list-all', [
           'title' => "Frågor",
-          'html' => $htmltable
-      ]);
-  }
+          'arrQ' => $arrQuestions
+		]);
+	}
+  
+  
+	public function addTags($qid)
+	{
+
+		$this->Qtag = new \Jovis\Question\Qtag();
+		$this->Qtag->setDI($this->di);
+		
+		$qtags = $this->Qtag->find($qid);
+		
+		if (!empty($qtags)) {
+			foreach ($qtags as $key1=>$values1){
+				foreach ($values1 as $key2=>$values2){ //hitta värden i taggen
+					switch ($key2) {
+					   case 'qid':
+						 $qid = $values2;
+						 break;
+					   case 'tid':
+						 $tid = $values2;
+						 $this->addTaggName($tid); //hitta och lägg till taggens namn
+						 break;
+					}
+				}
+			}
+		}	
+	}
+	
+	public function addTaggName($tid)
+	{
+		$this->Tag = new \Jovis\Question\Tag();
+		$this->Tag->setDI($this->di);
+			
+		$tagname = $this->Tag->findName($tid);
+					
+		foreach ($tagname as $key1=>$values1){ //hitta namnet för taggen
+			foreach ($values1 as $key2=>$values2){ //hitta namnet för taggen
+				switch ($key2) {
+					case 'tid':
+						$qid = $values2;
+						break;
+					case 'name':
+						$name = $values2;
+						$this->qContainer->addTag($name);
+						break;
+				}
+			}
+		}			
+	}
   
   /**
-   * List user with id.
+   * List question with id.
    *
-   * @param int $id of user to display
+   * @param int $id of question to display
    *
    * @return void
    */
-  public function idAction($id = null)
-  {
-      $this->initialize();
+
+	public function idAction($id)
+	{
+		$this->initialize();
+		$all = $this->question->find($id);
+		
+		foreach ($all as $key=>$v){ //hitta värden i frågan
+			switch ($key) {
+			   case 'qid':
+					 $qid = $v;
+					 break;
+				case 'title':
+				 	$title = $v;
+					 break;
+			   case 'content':
+					 $content = $v;
+					 break;
+			   case 'created':
+					 $created = $v;
+					 break;
+			   case 'updated':
+					 $updated = $v;
+					 break;
+			   case 'uid':
+					 $uid = $v;
+					 break;
+			}
+		}
+		
+		//skapa frågecontainer
+		$this->qContainer = new \Jovis\Question\QuestionContainer($qid, $title, $content, $created, $updated, $uid);
+		
+		//hitta frågornas svar
+		$answers = $this->answer->find($qid);
+
+
+			
+		if (!empty($answers))
+		{
+			//ta ut värden från svaren
+			foreach ($answers as $key1=>$value) {
+				if (!empty($value)){
+					var_dump($value);
+					foreach ($value as $key2=>$v){
+						switch ($key2) {
+							case 'aid':
+								 $aid = $v;
+								 break;
+							case 'content':
+								 $content = $v;
+								 break;
+							case 'created':
+								 $created = $v;
+								 break;
+							case 'uid':
+								 $uid = $v;
+								 break;
+							case 'qid':
+								 $qid = $v;
+								 break;
+						}
+					}
+				}
+				
+				if (isset($aid)) {	
+					//skapa en svarsbehållare svarets värden
+					$this->aContainer = new \Jovis\Question\AnswerContainer($aid, $content, $created, $uid, $qid);
+						
+					//hitta svarets kommentarer
+					
+					$acomments = new \Jovis\Question\Acomment();
+					$acomments->setDI($this->di);
+						
+					$allAComment = $acomments->find($aid);
+					
+							
+					//lägg in kommentarerna till svarsbehållaren	
+					$this->aContainer->addComments($allAComment);
+				
+					
+					//lägg till svaren till frågebehållaren
+					$this->qContainer->addAnswer($this->aContainer);
+				}
+			}
+		}
+		
+		
+		//hitta kommentarerna till frågan
+			
+		$this->qcomment = new \Jovis\Question\Qcomment();
+		$this->qcomment->setDI($this->di);
+			
+		$allQComments = $this->qcomment->find($qid);
+		
+		$this->qContainer->addComments($allQComments);
+		
+		$this->addTags($qid);
    
-      $user = $this->users->find($id);
-   
-      $this->theme->setTitle("View user with id");
-      $this->views->add('users/view', [
-          'user' => $user,
-          'title' => "Användare"
-      ]);
-  }
+		$this->theme->setTitle("Fråga");
+		$this->views->add('question/show-question', [
+			'title' => $title,
+			'questionContainer' => $this->qContainer
+		]);
+	}
+  
   
   /**
-   * Add new user.
+   * Add new Question.
    *
    * @param string $acronym of user to add.
    *
@@ -100,23 +250,11 @@ class QuestionController implements \Anax\DI\IInjectionAware
   public function addAction()
   {
       $this->initialize();
-  
-         
-     /* $this->users->save([
-          'acronym' => $acronym,
-          'email' => $acronym . '@mail.se',
-          'name' => 'Mr/Mrs ' . $acronym,
-          'password' => crypt($acronym),
-          'created' => $now,
-          'active' => $now,
-      ]);
-      
-       */
-      
-      session_name('cformuser');
+        
+      session_name('cformadd');
       session_start();
         
-      $form = new \Anax\HTMLForm\CFormAddUser();
+      $form = new \Anax\HTMLForm\CFormAddQuestion();
       $form->setDI($this->di);
         
       //Om check har ett värde har formuläret postats och sidan körs vidare via form-objektet, 
@@ -126,8 +264,8 @@ class QuestionController implements \Anax\DI\IInjectionAware
       $form->check();
         
       $this->di->theme->setTitle("Lägg till användare");
-      $this->di->views->add('users/add', [
-          'title' => "Lägg till användare användare:",
+      $this->di->views->add('question/addquestion', [
+          'title' => "Lägg till användare:",
           'content' => $form->getHTML(),
         ]);
   }
