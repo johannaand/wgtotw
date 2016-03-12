@@ -4,7 +4,7 @@ namespace Jovis\HTMLForm;
  * Anax base class for wrapping sessions.
  *
  */
-class CFormAddQuestion extends \Mos\HTMLForm\CForm
+class CFormAddAnswer extends \Mos\HTMLForm\CForm
 {
     use \Anax\DI\TInjectionaware,
         \Anax\MVC\TRedirectHelpers;
@@ -15,22 +15,14 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
      * Constructor
      *
      */
-    public function __construct()
+    public function __construct($qid)
     {
       
        parent::__construct([], [
-           'Titel' => [
-                'type'        => 'text',
-                'required'    => true,
-                'validation'  => ['not_empty'],
-            ],
             'Text' => [
                 'type'        => 'text',
                 'required'    => true,
                 'validation'  => ['not_empty'],
-            ],
-            'Tag' => [
-                'type'        => 'text',
             ],
             'Användarid' => [
                 'type'        => 'text',
@@ -45,6 +37,7 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
                 'callback'  => [$this, 'callbackRegret'],
             ],
         ]);
+        $this->qid = $qid;
     }
 
     /**
@@ -63,17 +56,16 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
      */
     public function callbackSave()
     {
-      $users = new \Jovis\Question\Question();
-      $users->setDI($this->di);
+      $answer = new \Jovis\Question\Answer();
+      $answer->setDI($this->di);
       
       $now = gmdate('Y-m-d H:i:s');
       
-         $saved = $users->save([
-            'title'   => $this->Value('Titel'),
-            'content' => $this->Value('Text'),
-            'uid'     => $this->Value('Användarid'),
-            'created' => $now, 
-            'updated' => $now,
+         $saved = $answer->save([
+            'content'	=> $this->Value('Text'),
+            'uid'     	=> $this->Value('Användarid'),
+            'qid'		=> $this->qid,
+            'created' 	=> $now, 
             ]);
          
          return $saved ? true : false;

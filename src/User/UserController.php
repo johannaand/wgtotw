@@ -1,12 +1,12 @@
 <?php
 
-namespace Jovis\Question;
+namespace Jovis\User;
  
 /**
  * A controller for handling questions.
  *
  */
-class QuestionController implements \Anax\DI\IInjectionAware
+class UserController implements \Anax\DI\IInjectionAware
 {
     use \Anax\DI\TInjectable;
     
@@ -33,49 +33,40 @@ class QuestionController implements \Anax\DI\IInjectionAware
    */
   public function listAction($info=null)
   {
-		$this->initialize();
-		$all = $this->question->findAll();
-		$arrQuestions;
+		$this->initialize();	
+		$all = $this->user->findAll();
+		$arrUsers;
 
 		foreach ($all as $key1=>$value) {	
 
 			foreach ($value as $key2=>$v){ //hitta värden i frågan
 				switch ($key2) {
-					case 'qid':
-						 $id = $v;
+					case 'nic':
+						 $nic = $v;
 						 break;
-					case 'title':
-						 $title = $v;
+					case 'fname':
+						 $fname = $v;
 						 break;
-					case 'content':
-						 $content = $v;
+					case 'lname':
+						 $lname = $v;
+						 break;
+					case 'email':
+						 $email = $v;
 						 break;
 					case 'created':
 						 $created = $v;
 						 break;
-					case 'updated':
-						 $updated = $v;
-						 break;
-					case 'uid':
-						 $uid = $v;
-						 break;
-				}
+					}
 			}
 			
-			//skapa frågecontainer
-			$this->qContainer = new \Jovis\Question\QuestionContainer($id, $title, $content, $created, $updated, $uid);
-			
-			//lägg till taggarna
-			$this->addTags($id);
-			
-			$arrQuestions[] = $this->qContainer;
-			
+			$arr = new array('nic'=$nic, 'fname'=>$fname, 'lname' => $lname, 'email' => $email, 'created' => $created);
+			$arrUsers[] = $arr;		
 		}        
    
-		$this->theme->setTitle("Frågor");
-		$this->views->add('question/list-all', [
-          'title' => "Frågor",
-          'arrQ' => $arrQuestions
+		$this->theme->setTitle("Användare");
+		$this->views->add('users/list-all', [
+          'title' => "Användare",
+          'arrUsers' => $arrUsers
 		]);
 	}
   
