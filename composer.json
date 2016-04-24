@@ -14,9 +14,7 @@
     "require": {
         "php": ">=5.4",
         "mos/cdatabase": "dev-master",
-        "jovis/chtmltable": "@dev",
-	"michelf/php-markdown": "dev-master"
-    },
+        "jovis/chtmltable": "@dev"    },
     "autoload": {
         "psr-4": { "Jovis\\": "src/" }
     },
