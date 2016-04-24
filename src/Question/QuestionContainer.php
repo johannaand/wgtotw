@@ -26,7 +26,7 @@ class QuestionContainer implements \Anax\DI\IInjectionAware
     {
         $this->id = $id;
         $this->title = $title;
-        $this->content = $content;
+        $this->content =  \Michelf\MarkdownExtra::defaultTransform($content);
         $this->created = $created;
         $this->updated = $updated;
         $this->uid = $uid;
