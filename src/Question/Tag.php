@@ -21,6 +21,17 @@ class Tag extends \Jovis\DatabaseModel\CDatabaseModel
 		$this->db->setFetchModeClass(__CLASS__);
 		return $this->db->fetchAll();
 	}
+	
+	public function findId($name)
+	{
+		$this->db->select('tid')
+			->from($this->getSource())
+             ->where("name = ?");
+ 
+		$this->db->execute([$name]);
+		
+		return $this->db->fetchInto($this);
+	}
 }
 
 ?>

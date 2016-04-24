@@ -6,17 +6,19 @@ namespace Jovis\Question;
  * En behållare för alla frågor och dess svar och kommentarer
  *
  */
-class AnswerContainer
+class AnswerContainer implements \Anax\DI\IInjectionAware
 {
+    use \Anax\DI\TInjectable;
+
 	private $id;
 	private $content;
 	private $created;
 	private $uid;
 	private $qid;
 	
-	private $Comments; //innehåller kommentarsobjekten Acomment
+	private $comments; //array som innehåller kommentarsobjekten Acomment
 	
-	 public function __construct($id, $content, $created, $uid, $qid)
+	public function __construct($id, $content, $created, $uid, $qid)
     {
         $this->id = $id;
         $this->content = $content;
@@ -25,9 +27,31 @@ class AnswerContainer
         $this->qid = $qid;
     }
 
-	public function addComments($comments)
+	public function addComments()
 	{
-		$this->Comments = $comments;
+		$acomments = new \Jovis\Question\Acomment();
+		$acomments->setDI($this->di);
+						
+		$comments = $acomments->find($this->id);
+				
+		$this->comments = $comments;
+	}
+	
+	/**
+	* Get object properties.
+	*
+	* @return array with object properties.
+	*/
+	public function getProperties()
+	{
+		$properties = get_object_vars($this);
+   
+		return $properties;
+	}
+	
+	public function getComments()
+	{
+		return $this->comments;
 	}
 }
 

@@ -4,30 +4,31 @@ namespace Jovis\HTMLForm;
  * Anax base class for wrapping sessions.
  *
  */
-class CFormAddAnswer extends \Mos\HTMLForm\CForm
+class CFormLogin extends \Mos\HTMLForm\CForm
 {
     use \Anax\DI\TInjectionaware,
         \Anax\MVC\TRedirectHelpers;
         
-    private $users;
         
     /**
      * Constructor
      *
      */
-    public function __construct($qid)
+    public function __construct()
     {
       
        parent::__construct([], [
-            'Text' => [
-                'type'        => 'textarea',
+            'Användarnamn' => [
+                'type'        => 'text',
                 'required'    => true,
                 'validation'  => ['not_empty'],
             ],
-            'Användarid' => [
-                'type'        => 'text',
+            'Lösenord' => [
+                'type'        => 'password', 
+                'required'    => true,
+                
             ],
-            'Spara' => [
+            'Logga_In' => [
                 'type'      => 'submit',
                 'callback'  => [$this, 'callbackSave'],
             ],
@@ -36,8 +37,7 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
                 'type'      => 'submit',
                 'callback'  => [$this, 'callbackRegret'],
             ],
-        ]);
-        $this->qid = $qid;
+        ]);        
     }
 
     /**
@@ -55,28 +55,29 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      *
      */
     public function callbackSave()
-    {
-      $answer = new \Jovis\Question\Answer();
-      $answer->setDI($this->di);
-      
-      $now = gmdate('Y-m-d H:i:s');
-      
-         $saved = $answer->save([
-            'content'	=> $this->Value('Text'),
-            'uid'     	=> $this->Value('Användarid'),
-            'qid'		=> $this->qid,
-            'created' 	=> $now, 
-            ]);
-         
-         return $saved ? true : false;
+    {    
+		$userSession = new \Jovis\User\UserSession();
+		$userSession->setDI($this->di);
+		
+		$nic = $this->Value('Användarnamn');
+		
+		$pwd = $this->Value('Lösenord');
+		
+        $loggedIn = $userSession->Login($nic, $pwd);
+                        
+        return $loggedIn ? true : false;
     }
     
     
     
     public function callbackRegret()
     {
-      $this->redirectTo('');
-      //$this->url->create('question/list-all');	
+		if (isset($_SESSION['lastpage'])) {
+			$lastpage = $_SESSION['lastpage'];
+			$this->redirectTo($lastpage);
+		}	
+		else
+			$this->redirectTo('');
     }
     
       
@@ -86,8 +87,13 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      */
     public function callbackSuccess()
     {
-       $this->redirectTo('question/id/'.$this->qid);
-       //$this->url->create('question/id/'.$qid);
+       if (isset($_SESSION['lastpage'])) {
+			$lastpage = $_SESSION['lastpage'];
+			//echo $lastpage;
+			$this->redirectTo($lastpage);
+		}	
+		else
+			$this->redirectTo('');
     }
     /**
      * Callback What to do when form could not be processed?
@@ -95,7 +101,7 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      */
     public function callbackFail()
     {
-        //$this->AddOutput("<p><i>Form was submitted and the Check() method returned false.</i></p>");
-        $this->redirectTo();
+        $this->AddOutput("<p><i>Fel användarnamn eller lösenord</i></p>");
+        header("Location: " . $_SERVER['PHP_SELF']);
     }
 }

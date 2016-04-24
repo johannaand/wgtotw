@@ -17,7 +17,6 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
      */
     public function __construct()
     {
-      
        parent::__construct([], [
            'Titel' => [
                 'type'        => 'text',
@@ -25,7 +24,7 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
                 'validation'  => ['not_empty'],
             ],
             'Text' => [
-                'type'        => 'text',
+                'type'        => 'textarea',
                 'required'    => true,
                 'validation'  => ['not_empty'],
             ],
@@ -38,11 +37,6 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
             'Spara' => [
                 'type'      => 'submit',
                 'callback'  => [$this, 'callbackSave'],
-            ],
-            
-            'Ångra' => [
-                'type'      => 'submit',
-                'callback'  => [$this, 'callbackRegret'],
             ],
         ]);
     }
@@ -63,28 +57,52 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
      */
     public function callbackSave()
     {
-      $users = new \Jovis\Question\Question();
-      $users->setDI($this->di);
+      $questions = new \Jovis\Question\Question();
+      $questions->setDI($this->di);
       
       $now = gmdate('Y-m-d H:i:s');
       
-         $saved = $users->save([
-            'title'   => $this->Value('Titel'),
-            'content' => $this->Value('Text'),
-            'uid'     => $this->Value('Användarid'),
-            'created' => $now, 
-            'updated' => $now,
-            ]);
+      $saved = $questions->save([
+        'title'   => $this->Value('Titel'),
+        'content' => $this->Value('Text'),
+        'uid'     => $this->Value('Användarid'),
+        'created' => $now, 
+        'updated' => $now,
+        ]);
+        
+      $q = $questions->getProperties();  
+      $this->qid = $q['id'];
+        
+      $tagname = $this->Value('Tag');
+            
+      if (!empty($tagname)){
+      
+		  $tag = new \Jovis\Question\Tag();
+		  $tag->setDI($this->di);
+		  
+		  $tagid = $tag->findId($tagname);
+		  
+		  if (empty($tagid)) {
+			  $savedTag = $tag->save([
+			  'name' => $tagname,
+			 ]);
+			 
+			 $t = $tag->findId($tagname);	 
+		  }
+		  
+		  $tagprop = $t->getProperties();
+		  $tagid = $tagprop['tid'];
+		  
+		  $qtag = new \Jovis\Question\Qtag();
+		  $qtag->setDI($this->di);
+		  
+		  $savedTagQ = $qtag->save([
+			  'qid' => $this->qid,
+			  'tid'=> $tagid,
+		  ]);		  
+	  }
          
-         return $saved ? true : false;
-    }
-    
-    
-    
-    public function callbackRegret()
-    {
-      $this->redirectTo('');
-      //$this->url->create('question/list-all');	
+      return $saved ? true : false;
     }
     
       
@@ -94,7 +112,7 @@ class CFormAddQuestion extends \Mos\HTMLForm\CForm
      */
     public function callbackSuccess()
     {
-       $this->redirectTo('');
+       $this->redirectTo('question/id/'.$this->qid);
        //$this->url->create('question/list-all');
     }
     /**

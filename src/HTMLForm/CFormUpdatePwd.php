@@ -4,7 +4,7 @@ namespace Jovis\HTMLForm;
  * Anax base class for wrapping sessions.
  *
  */
-class CFormAddAnswer extends \Mos\HTMLForm\CForm
+class CFormUpdatePwd extends \Mos\HTMLForm\CForm
 {
     use \Anax\DI\TInjectionaware,
         \Anax\MVC\TRedirectHelpers;
@@ -15,31 +15,37 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      * Constructor
      *
      */
-    public function __construct($qid)
+    public function __construct($uid)
     {
-      
-       parent::__construct([], [
-            'Text' => [
-                'type'        => 'textarea',
+		parent::__construct([], [
+            'uid' => [
+                'type'        => 'hidden',
+                'required'    => true,
+                'value'       => $uid,
+                'validation'  => ['not_empty'],
+            ],
+            'Lösenord' => [
+                'type'        => 'password',
                 'required'    => true,
                 'validation'  => ['not_empty'],
             ],
-            'Användarid' => [
-                'type'        => 'text',
+            'Upprepa_lösenord' => [
+                'type'        => 'password',
+                'required'    => true,
+                'validation'  => ['not_empty'],
             ],
             'Spara' => [
                 'type'      => 'submit',
                 'callback'  => [$this, 'callbackSave'],
             ],
-            
             'Ångra' => [
                 'type'      => 'submit',
                 'callback'  => [$this, 'callbackRegret'],
             ],
-        ]);
-        $this->qid = $qid;
-    }
-
+        ]);           
+      }
+    
+    
     /**
      * Customise the check() method.
      *
@@ -56,38 +62,38 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      */
     public function callbackSave()
     {
-      $answer = new \Jovis\Question\Answer();
-      $answer->setDI($this->di);
+        $users = new \Jovis\User\User();
+        $users->setDI($this->di);
+        
+        $losen1 = $this->Value('Lösenord');
+        $losen2 = $this->Value('Upprepa_lösenord'); 
+        
+        if ($losen1!=$losen2){
+			return false;
+		}
+		else {
       
-      $now = gmdate('Y-m-d H:i:s');
-      
-         $saved = $answer->save([
-            'content'	=> $this->Value('Text'),
-            'uid'     	=> $this->Value('Användarid'),
-            'qid'		=> $this->qid,
-            'created' 	=> $now, 
-            ]);
-         
-         return $saved ? true : false;
+			$saved = $users->save([
+				'uid'        => $this->Value('uid'),
+				'pwd'      => password_hash($losen1, PASSWORD_DEFAULT),
+			]);
+			
+			return $saved ? true : false;
+		}
     }
     
+   public function callbackRegret()
+   {
+	   $this->redirectTo('question/user/'.$this->Value('uid'));
+   }
     
-    
-    public function callbackRegret()
-    {
-      $this->redirectTo('');
-      //$this->url->create('question/list-all');	
-    }
-    
-      
     /**
      * Callback What to do if the form was submitted?
      *
      */
     public function callbackSuccess()
     {
-       $this->redirectTo('question/id/'.$this->qid);
-       //$this->url->create('question/id/'.$qid);
+       $this->redirectTo('question/user/'.$this->Value('uid')."/losenuppdaterat");
     }
     /**
      * Callback What to do when form could not be processed?
@@ -95,7 +101,7 @@ class CFormAddAnswer extends \Mos\HTMLForm\CForm
      */
     public function callbackFail()
     {
-        //$this->AddOutput("<p><i>Form was submitted and the Check() method returned false.</i></p>");
-        $this->redirectTo();
+		$this->AddOutput("<p><i>Lösenorden matchar inte. Försök igen.</i></p>");
+        header("Location: " . $_SERVER['PHP_SELF']);
     }
 }
